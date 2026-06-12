@@ -2,6 +2,8 @@
 
 A lightweight, client-side utility hub designed to clean up text for LLMs and process small media files. It runs entirely in your browser without external servers, databases, or account requirements.
 
+![](https://github.com/ahmojunior/ahmotools/blob/main/banner.png?raw=true)
+
 ## Features
 
 * **Workspace Editor:** A minimalist text area for editing `.txt`, `.md`, and `.py` files.
