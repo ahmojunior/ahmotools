@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,8 +30,8 @@
 
     .bg-grid {
       background-image:
-        linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+        linear-gradient(rgba(255, 255, 255, .02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .02) 1px, transparent 1px);
       background-size: 48px 48px;
     }
 
@@ -91,26 +92,32 @@
       min-height: 50vh;
       max-height: 75vh;
       scrollbar-width: thin;
-      scrollbar-color: rgba(255,255,255,0.1) transparent;
+      scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
     }
+
     #editor:focus {
       outline: none;
       box-shadow: 0 0 0 1px rgba(153, 193, 222, 0.25);
     }
+
     #editor::placeholder {
-      color: rgba(255,255,255,0.15);
+      color: rgba(255, 255, 255, 0.15);
     }
 
     /* Fallback for Tailwind's .hidden in case CDN is slow */
-    .hidden { display: none !important; }
+    .hidden {
+      display: none !important;
+    }
 
     /* Toolbar buttons */
     .tool-btn {
       transition: all 0.15s ease;
     }
+
     .tool-btn:hover {
-      background: rgba(255,255,255,0.08);
+      background: rgba(255, 255, 255, 0.08);
     }
+
     .tool-btn:active {
       transform: scale(0.97);
     }
@@ -120,6 +127,7 @@
       background: rgba(153, 193, 222, 0.15);
       border-color: rgba(153, 193, 222, 0.3);
     }
+
     .strip-btn:hover {
       background: rgba(153, 193, 222, 0.25);
     }
@@ -134,29 +142,47 @@
     .toast {
       animation: toast-in 0.25s ease-out, toast-out 0.3s ease-in forwards;
     }
+
     @keyframes toast-in {
-      from { opacity: 0; transform: translateY(12px) scale(0.96); }
-      to   { opacity: 1; transform: translateY(0) scale(1); }
+      from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.96);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
     }
+
     @keyframes toast-out {
-      from { opacity: 1; transform: translateY(0) scale(1); }
-      to   { opacity: 0; transform: translateY(-8px) scale(0.96); }
+      from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+
+      to {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.96);
+      }
     }
 
     /* Export dropdown */
     .export-menu {
       display: none;
     }
+
     .export-menu.open {
       display: block;
     }
 
     /* Trimmer */
     .trimmer-drop {
-      border: 2px dashed rgba(255,255,255,0.08);
+      border: 2px dashed rgba(255, 255, 255, 0.08);
       transition: all 0.2s ease;
       cursor: pointer;
     }
+
     .trimmer-drop:hover,
     .trimmer-drop.drag-over {
       border-color: rgba(153, 193, 222, 0.4);
@@ -164,12 +190,13 @@
     }
 
     .time-input {
-      background: rgba(0,0,0,0.3);
-      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       color: #e0e0e8;
       font-family: inherit;
       transition: border-color 0.15s ease;
     }
+
     .time-input:focus {
       outline: none;
       border-color: rgba(153, 193, 222, 0.4);
@@ -181,20 +208,23 @@
       color: #b8d4e8;
       transition: all 0.15s ease;
     }
+
     .trim-btn:hover:not(:disabled) {
       background: rgba(153, 193, 222, 0.3);
     }
+
     .trim-btn:disabled {
       opacity: 0.35;
       cursor: not-allowed;
     }
 
     .progress-bar {
-      background: rgba(255,255,255,0.05);
+      background: rgba(255, 255, 255, 0.05);
       border-radius: 999px;
       overflow: hidden;
       height: 6px;
     }
+
     .progress-fill {
       height: 100%;
       background: linear-gradient(90deg, #6a9cbd, #99c1de);
@@ -207,20 +237,40 @@
       align-items: center;
       gap: 6px;
     }
+
     .ffmpeg-dot {
-      width: 6px; height: 6px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
     }
-    .ffmpeg-dot.loading { background: #facc15; animation: pulse-dot 1s ease infinite; }
-    .ffmpeg-dot.ready   { background: #34d399; }
-    .ffmpeg-dot.error   { background: #f87171; }
+
+    .ffmpeg-dot.loading {
+      background: #facc15;
+      animation: pulse-dot 1s ease infinite;
+    }
+
+    .ffmpeg-dot.ready {
+      background: #34d399;
+    }
+
+    .ffmpeg-dot.error {
+      background: #f87171;
+    }
 
     @keyframes pulse-dot {
-      0%, 100% { opacity: 1; }
-      50%      { opacity: 0.3; }
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.3;
+      }
     }
   </style>
 </head>
+
 <body class="bg-grid font-mono text-neutral-300 antialiased">
 
   <!-- Ambient glow accents -->
@@ -239,21 +289,19 @@
 
     <!-- Tab Navigation -->
     <nav class="glass rounded-xl p-1.5 flex gap-1.5 mb-6" role="tablist">
-      <button
-        class="tab-btn active flex-1 px-4 py-2.5 rounded-lg text-sm font-medium border border-transparent"
-        role="tab"
-        aria-selected="true"
-        data-tab="workspace"
-      >
+      <button class="tab-btn active flex-1 px-4 py-2.5 rounded-lg text-sm font-medium border border-transparent"
+        role="tab" aria-selected="true" data-tab="workspace">
         Workspace
       </button>
       <button
         class="tab-btn flex-1 px-4 py-2.5 rounded-lg text-sm font-medium text-neutral-500 border border-transparent"
-        role="tab"
-        aria-selected="false"
-        data-tab="trimmer"
-      >
+        role="tab" aria-selected="false" data-tab="trimmer">
         Video Trimmer
+      </button>
+      <button
+        class="tab-btn flex-1 px-4 py-2.5 rounded-lg text-sm font-medium text-neutral-500 border border-transparent"
+        role="tab" aria-selected="false" data-tab="converter">
+        To MP3
       </button>
     </nav>
 
@@ -277,10 +325,14 @@
               <button id="export-toggle" class="tool-btn glass rounded-lg px-3 py-2 text-xs flex items-center gap-1.5">
                 <span>&#128190;</span> Export <span class="text-neutral-600">&#9662;</span>
               </button>
-              <div id="export-menu" class="export-menu absolute top-full left-0 mt-1 glass-strong rounded-lg py-1 z-20 min-w-[120px]">
-                <button data-ext="txt" class="export-opt w-full text-left px-3 py-1.5 text-xs hover:bg-white/5">.txt</button>
-                <button data-ext="md" class="export-opt w-full text-left px-3 py-1.5 text-xs hover:bg-white/5">.md</button>
-                <button data-ext="py" class="export-opt w-full text-left px-3 py-1.5 text-xs hover:bg-white/5">.py</button>
+              <div id="export-menu"
+                class="export-menu absolute top-full left-0 mt-1 glass-strong rounded-lg py-1 z-20 min-w-[120px]">
+                <button data-ext="txt"
+                  class="export-opt w-full text-left px-3 py-1.5 text-xs hover:bg-white/5">.txt</button>
+                <button data-ext="md"
+                  class="export-opt w-full text-left px-3 py-1.5 text-xs hover:bg-white/5">.md</button>
+                <button data-ext="py"
+                  class="export-opt w-full text-left px-3 py-1.5 text-xs hover:bg-white/5">.py</button>
               </div>
             </div>
 
@@ -292,28 +344,28 @@
             <span id="char-count" class="text-xs text-neutral-600 tabular-nums">0 chars</span>
 
             <!-- Strip Spaces -->
-            <button id="strip-btn" class="strip-btn tool-btn rounded-lg px-3 py-2 text-xs font-medium text-sky-300 border flex items-center gap-1.5">
+            <button id="strip-btn"
+              class="strip-btn tool-btn rounded-lg px-3 py-2 text-xs font-medium text-sky-300 border flex items-center gap-1.5">
               <span>&#9889;</span> Strip Spaces
             </button>
 
             <!-- Undo Strip (hidden until a strip runs) -->
-            <button id="undo-btn" class="hidden tool-btn glass rounded-lg px-3 py-2 text-xs flex items-center gap-1.5 text-amber-400/80">
+            <button id="undo-btn"
+              class="hidden tool-btn glass rounded-lg px-3 py-2 text-xs flex items-center gap-1.5 text-amber-400/80">
               &#8630; Undo
             </button>
           </div>
 
           <!-- Editor area (also a drop zone) -->
           <div id="drop-zone" class="rounded-xl border border-transparent transition-colors duration-200">
-            <textarea
-              id="editor"
+            <textarea id="editor"
               class="w-full rounded-xl px-4 py-3 text-sm text-neutral-200 font-mono border border-white/5 leading-relaxed"
-              placeholder="Paste or drop a .txt, .md, or .py file here..."
-              spellcheck="false"
-            ></textarea>
+              placeholder="Paste or drop a .txt, .md, or .py file here..." spellcheck="false"></textarea>
           </div>
 
           <!-- Drop hint -->
-          <p class="mt-2 text-[10px] text-neutral-700 text-center">Drop text files here &middot; binary files will be rejected</p>
+          <p class="mt-2 text-[10px] text-neutral-700 text-center">Drop text files here &middot; binary files will be
+            rejected</p>
 
         </div>
       </section>
@@ -336,7 +388,8 @@
             <div class="text-3xl opacity-20 mb-2">&#128253;</div>
             <p class="text-neutral-500 text-sm mb-1">Drop a video or audio file here</p>
             <p class="text-neutral-600 text-[11px]">MP4, WebM, MP3 &middot; max 500 MB</p>
-            <input type="file" id="trimmer-file-input" accept="video/mp4,video/webm,audio/mpeg,audio/mp3" class="hidden">
+            <input type="file" id="trimmer-file-input" accept="video/mp4,video/webm,audio/mpeg,audio/mp3,.mp4,.webm,.mp3"
+              class="hidden">
           </div>
 
           <!-- File info (hidden until file loaded) -->
@@ -346,7 +399,8 @@
                 <p id="trimmer-filename" class="text-sm text-neutral-200 truncate max-w-[280px]"></p>
                 <p id="trimmer-filesize" class="text-[11px] text-neutral-500 mt-0.5"></p>
               </div>
-              <button id="trimmer-clear" class="text-neutral-600 hover:text-neutral-400 text-xs px-2 py-1 rounded hover:bg-white/5 transition-colors">Clear</button>
+              <button id="trimmer-clear"
+                class="text-neutral-600 hover:text-neutral-400 text-xs px-2 py-1 rounded hover:bg-white/5 transition-colors">Clear</button>
             </div>
             <!-- Size warning -->
             <p id="trimmer-size-warning" class="hidden mt-2 text-[11px] text-amber-400/80 leading-relaxed"></p>
@@ -363,11 +417,13 @@
             <div class="flex items-end gap-4">
               <div class="flex-1">
                 <label class="block text-[11px] text-neutral-500 mb-1.5">Start (seconds)</label>
-                <input id="trim-start" type="number" min="0" step="0.1" value="0" class="time-input w-full rounded-lg px-3 py-2 text-sm tabular-nums">
+                <input id="trim-start" type="number" min="0" step="0.1" value="0"
+                  class="time-input w-full rounded-lg px-3 py-2 text-sm tabular-nums">
               </div>
               <div class="flex-1">
                 <label class="block text-[11px] text-neutral-500 mb-1.5">End (seconds)</label>
-                <input id="trim-end" type="number" min="0" step="0.1" value="0" class="time-input w-full rounded-lg px-3 py-2 text-sm tabular-nums">
+                <input id="trim-end" type="number" min="0" step="0.1" value="0"
+                  class="time-input w-full rounded-lg px-3 py-2 text-sm tabular-nums">
               </div>
               <button id="trim-execute" class="trim-btn rounded-lg px-5 py-2 text-sm font-medium" disabled>
                 Trim
@@ -376,8 +432,10 @@
 
             <!-- Slider range -->
             <div class="space-y-1">
-              <input id="trim-range-start" type="range" min="0" max="100" step="0.1" value="0" class="w-full accent-sky-400 h-1.5">
-              <input id="trim-range-end" type="range" min="0" max="100" step="0.1" value="100" class="w-full accent-sky-400 h-1.5">
+              <input id="trim-range-start" type="range" min="0" max="100" step="0.1" value="0"
+                class="w-full accent-sky-400 h-1.5">
+              <input id="trim-range-end" type="range" min="0" max="100" step="0.1" value="100"
+                class="w-full accent-sky-400 h-1.5">
             </div>
 
             <!-- Progress -->
@@ -386,6 +444,70 @@
                 <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
               </div>
               <p id="progress-text" class="text-[11px] text-neutral-500 text-center">Processing...</p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- To MP3 Pane -->
+      <section id="pane-converter" class="tab-pane" role="tabpanel">
+        <div class="glass-strong rounded-2xl p-4 sm:p-6">
+
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-sm font-medium text-neutral-200">Convert to MP3</h2>
+            <span class="ffmpeg-status text-[11px] text-neutral-500">
+              <span class="ffmpeg-dot" id="ffmpeg-dot-conv"></span>
+              <span id="ffmpeg-label-conv">Loading ffmpeg...</span>
+            </span>
+          </div>
+
+          <div id="converter-drop" class="trimmer-drop rounded-xl p-10 text-center mb-4">
+            <div class="text-3xl opacity-20 mb-2">&#127925;</div>
+            <p class="text-neutral-500 text-sm mb-1">Drop a video or audio file here</p>
+            <p class="text-neutral-600 text-[11px]">MP4, WebM, MP3, WAV &middot; max 500 MB</p>
+            <input type="file" id="converter-file-input"
+              accept="video/mp4,video/webm,audio/mpeg,audio/mp3,audio/wav,.mp4,.webm,.mp3,.wav"
+              class="hidden">
+          </div>
+
+          <div id="converter-file-info" class="hidden mb-4 glass rounded-xl px-4 py-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <p id="converter-filename" class="text-sm text-neutral-200 truncate max-w-[280px]"></p>
+                <p id="converter-filesize" class="text-[11px] text-neutral-500 mt-0.5"></p>
+              </div>
+              <button id="converter-clear"
+                class="text-neutral-600 hover:text-neutral-400 text-xs px-2 py-1 rounded hover:bg-white/5 transition-colors">Clear</button>
+            </div>
+          </div>
+
+          <div id="converter-preview" class="hidden mb-4 rounded-xl overflow-hidden bg-black/30 border border-white/5">
+            <video id="converter-player" class="w-full max-h-[240px]" controls preload="metadata"></video>
+          </div>
+
+          <div id="converter-controls" class="hidden space-y-4">
+            <div class="flex items-center gap-4">
+              <div class="flex-1">
+                <label class="block text-[11px] text-neutral-500 mb-1.5">Bitrate</label>
+                <select id="convert-bitrate"
+                  class="time-input w-full rounded-lg px-3 py-2 text-sm">
+                  <option value="320k">320 kbps (high)</option>
+                  <option value="192k" selected>192 kbps (standard)</option>
+                  <option value="128k">128 kbps (small)</option>
+                </select>
+              </div>
+              <button id="convert-execute" class="trim-btn rounded-lg px-5 py-2 text-sm font-medium" disabled
+                style="margin-top: 22px;">
+                Convert
+              </button>
+            </div>
+
+            <div id="converter-progress" class="hidden space-y-2">
+              <div class="progress-bar">
+                <div id="convert-progress-fill" class="progress-fill" style="width: 0%"></div>
+              </div>
+              <p id="convert-progress-text" class="text-[11px] text-neutral-500 text-center">Processing...</p>
             </div>
           </div>
 
@@ -408,10 +530,10 @@
     function showToast(message, type = 'info') {
       const container = document.getElementById('toast-container');
       const colors = {
-        error:   'border-red-500/40 text-red-300',
+        error: 'border-red-500/40 text-red-300',
         warning: 'border-amber-500/40 text-amber-300',
         success: 'border-emerald-500/40 text-emerald-300',
-        info:    'border-sky-400/40 text-sky-300',
+        info: 'border-sky-400/40 text-sky-300',
       };
       const toast = document.createElement('div');
       const duration = type === 'error' ? 4500 : 3000;
@@ -587,13 +709,13 @@
 
     // ── ffmpeg.wasm loader ──
     // Uses the ESM-compatible UMD build from unpkg.
-    const FFMPEG_CORE_URL  = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js';
+    const FFMPEG_CORE_URL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js';
     const FFMPEG_CORE_WASM = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.wasm';
 
     let ffmpegInstance = null;
     let ffmpegReady = false;
 
-    const ffmpegDot   = document.getElementById('ffmpeg-dot');
+    const ffmpegDot = document.getElementById('ffmpeg-dot');
     const ffmpegLabel = document.getElementById('ffmpeg-label');
 
     function setFfmpegStatus(state, text) {
@@ -603,6 +725,11 @@
 
     // Dynamically load the FFmpeg UMD bundle and initialize
     async function loadFfmpeg() {
+      if (window.location.protocol === 'file:') {
+        setFfmpegStatus('error', 'needs HTTP server');
+        showToast('Open via HTTP, not file://. Run ./serve.sh then open http://localhost:8080', 'error');
+        return;
+      }
       try {
         setFfmpegStatus('loading', 'Loading ffmpeg...');
 
@@ -615,39 +742,62 @@
           document.head.appendChild(script);
         });
 
-        // Load the util bundle for fetchFile
-        await new Promise((resolve, reject) => {
-          const script = document.createElement('script');
-          script.src = 'https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/util.js';
-          script.onload = resolve;
-          script.onerror = reject;
-          document.head.appendChild(script);
-        });
-
         const { FFmpeg } = FFmpegWASM;
+
+        // Fetch a URL and return a same-origin blob: URL for it
+        async function toBlobURL(url, mimeType) {
+          const buf = await (await fetch(url)).arrayBuffer();
+          return URL.createObjectURL(new Blob([buf], { type: mimeType }));
+        }
+
+        setFfmpegStatus('loading', 'Fetching ffmpeg worker...');
+        const FFMPEG_BASE = 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd';
+        const workerBlobURL = await toBlobURL(`${FFMPEG_BASE}/814.ffmpeg.js`, 'text/javascript');
+
+        // classWorkerURL forces a module Worker, but the UMD core needs importScripts()
+        // which only works in classic Workers. Intercept Worker() to substitute the
+        // blob URL while keeping the default classic (non-module) type.
+        const OrigWorker = window.Worker;
+        window.Worker = function(scriptURL, opts) {
+          const str = scriptURL instanceof URL ? scriptURL.href : String(scriptURL);
+          if (/unpkg\.com\/@ffmpeg/.test(str) || str.includes('814.ffmpeg')) {
+            return new OrigWorker(workerBlobURL);
+          }
+          return new OrigWorker(scriptURL, opts);
+        };
+
         ffmpegInstance = new FFmpeg();
 
         ffmpegInstance.on('progress', ({ progress }) => {
           const pct = Math.min(100, Math.max(0, Math.round(progress * 100)));
           document.getElementById('progress-fill').style.width = pct + '%';
           document.getElementById('progress-text').textContent = `Processing... ${pct}%`;
+          document.getElementById('convert-progress-fill').style.width = pct + '%';
+          document.getElementById('convert-progress-text').textContent = `Processing... ${pct}%`;
         });
 
         ffmpegInstance.on('log', ({ message }) => {
           console.log('[ffmpeg]', message);
         });
 
+        setFfmpegStatus('loading', 'Loading ffmpeg core...');
         await ffmpegInstance.load({
           coreURL: FFMPEG_CORE_URL,
           wasmURL: FFMPEG_CORE_WASM,
         });
 
+        window.Worker = OrigWorker;
+
         ffmpegReady = true;
         setFfmpegStatus('ready', 'ffmpeg ready');
+        // Re-enable action buttons if a file was already loaded before ffmpeg finished
+        if (loadedFile) trimExecute.disabled = false;
+        if (converterFile) convertExecute.disabled = false;
       } catch (err) {
         console.error('ffmpeg load error:', err);
-        setFfmpegStatus('error', 'ffmpeg failed to load');
-        showToast('ffmpeg.wasm failed to load. Video trimming unavailable.', 'error');
+        const msg = err?.message || String(err) || 'unknown error';
+        setFfmpegStatus('error', 'ffmpeg error: ' + msg);
+        showToast('ffmpeg failed: ' + msg, 'error');
       }
     }
 
@@ -661,7 +811,7 @@
     }
 
     // ── Size constants (bytes) ──
-    const SIZE_WARN  = 200 * 1024 * 1024;  // 200 MB
+    const SIZE_WARN = 200 * 1024 * 1024;  // 200 MB
     const SIZE_BLOCK = 500 * 1024 * 1024;  // 500 MB
 
     function formatSize(bytes) {
@@ -671,31 +821,38 @@
     }
 
     // ── Trimmer DOM refs ──
-    const trimmerDrop      = document.getElementById('trimmer-drop');
+    const trimmerDrop = document.getElementById('trimmer-drop');
     const trimmerFileInput = document.getElementById('trimmer-file-input');
-    const trimmerFileInfo  = document.getElementById('trimmer-file-info');
-    const trimmerFilename  = document.getElementById('trimmer-filename');
-    const trimmerFilesize  = document.getElementById('trimmer-filesize');
-    const trimmerSizeWarn  = document.getElementById('trimmer-size-warning');
-    const trimmerClear     = document.getElementById('trimmer-clear');
-    const trimmerControls  = document.getElementById('trimmer-controls');
-    const trimStart        = document.getElementById('trim-start');
-    const trimEnd          = document.getElementById('trim-end');
-    const trimRangeStart   = document.getElementById('trim-range-start');
-    const trimRangeEnd     = document.getElementById('trim-range-end');
-    const trimExecute      = document.getElementById('trim-execute');
-    const trimmerProgress  = document.getElementById('trimmer-progress');
-    const progressFill     = document.getElementById('progress-fill');
-    const progressText     = document.getElementById('progress-text');
+    const trimmerFileInfo = document.getElementById('trimmer-file-info');
+    const trimmerFilename = document.getElementById('trimmer-filename');
+    const trimmerFilesize = document.getElementById('trimmer-filesize');
+    const trimmerSizeWarn = document.getElementById('trimmer-size-warning');
+    const trimmerClear = document.getElementById('trimmer-clear');
+    const trimmerControls = document.getElementById('trimmer-controls');
+    const trimStart = document.getElementById('trim-start');
+    const trimEnd = document.getElementById('trim-end');
+    const trimRangeStart = document.getElementById('trim-range-start');
+    const trimRangeEnd = document.getElementById('trim-range-end');
+    const trimExecute = document.getElementById('trim-execute');
+    const trimmerProgress = document.getElementById('trimmer-progress');
+    const progressFill = document.getElementById('progress-fill');
+    const progressText = document.getElementById('progress-text');
 
     const trimmerPreview = document.getElementById('trimmer-preview');
-    const previewPlayer  = document.getElementById('preview-player');
+    const previewPlayer = document.getElementById('preview-player');
     let previewURL = null;       // objectURL for preview, revoked on clear
 
     let loadedFile = null;       // raw File object
     let mediaDuration = 0;       // seconds (detected via <video>/<audio> element)
 
     const ALLOWED_MEDIA = new Set(['video/mp4', 'video/webm', 'audio/mpeg', 'audio/mp3']);
+    const EXT_MIME = { mp4: 'video/mp4', webm: 'video/webm', mp3: 'audio/mpeg' };
+
+    function resolveMediaType(file) {
+      if (ALLOWED_MEDIA.has(file.type)) return file.type;
+      const ext = file.name.split('.').pop().toLowerCase();
+      return EXT_MIME[ext] || file.type;
+    }
 
     // ── Drop zone click opens file picker ──
     trimmerDrop.addEventListener('click', () => trimmerFileInput.click());
@@ -721,8 +878,9 @@
 
     // ── Handle incoming media file ──
     async function handleMediaFile(file) {
+      const mediaType = resolveMediaType(file);
       // Type check
-      if (!ALLOWED_MEDIA.has(file.type)) {
+      if (!ALLOWED_MEDIA.has(mediaType)) {
         showToast('Unsupported format. Use MP4, WebM, or MP3.', 'error');
         return;
       }
@@ -764,7 +922,7 @@
 
       // Show preview (video files only)
       if (previewURL) URL.revokeObjectURL(previewURL);
-      if (file.type.startsWith('video')) {
+      if (mediaType.startsWith('video')) {
         previewURL = URL.createObjectURL(file);
         previewPlayer.src = previewURL;
         trimmerPreview.classList.remove('hidden');
@@ -847,7 +1005,7 @@
       if (!ffmpegReady || !ffmpegInstance || !loadedFile) return;
 
       const start = parseFloat(trimStart.value) || 0;
-      const end   = parseFloat(trimEnd.value) || 0;
+      const end = parseFloat(trimEnd.value) || 0;
 
       if (end <= start) {
         showToast('End time must be greater than start time.', 'warning');
@@ -865,15 +1023,13 @@
       progressText.textContent = 'Processing...';
 
       try {
-        const { fetchFile } = FFmpegUtil;
-
         // Determine output extension
         const ext = loadedFile.name.split('.').pop().toLowerCase() || 'mp4';
-        const inputName  = 'input.' + ext;
+        const inputName = 'input.' + ext;
         const outputName = 'output.' + ext;
 
         // Write input file to ffmpeg virtual FS
-        await ffmpegInstance.writeFile(inputName, await fetchFile(loadedFile));
+        await ffmpegInstance.writeFile(inputName, new Uint8Array(await loadedFile.arrayBuffer()));
 
         // Build ffmpeg args
         const duration = (end - start).toFixed(3);
@@ -903,7 +1059,7 @@
         try {
           await ffmpegInstance.deleteFile(inputName);
           await ffmpegInstance.deleteFile(outputName);
-        } catch (_) {}
+        } catch (_) { }
 
         progressFill.style.width = '100%';
         progressText.textContent = 'Done!';
@@ -919,7 +1075,147 @@
       trimExecute.textContent = 'Trim';
     });
 
-    // ── Tab switching (from Bucket 1) ──
+    // ══════════════════════════════════════
+    // ── To MP3 Converter ──
+    // ══════════════════════════════════════
+
+    const ALLOWED_CONVERTER = new Set(['video/mp4', 'video/webm', 'audio/mpeg', 'audio/mp3', 'audio/wav']);
+    const EXT_MIME_CONV = { mp4: 'video/mp4', webm: 'video/webm', mp3: 'audio/mpeg', wav: 'audio/wav' };
+
+    const converterDrop     = document.getElementById('converter-drop');
+    const converterFileInput = document.getElementById('converter-file-input');
+    const converterFileInfo = document.getElementById('converter-file-info');
+    const converterFilename = document.getElementById('converter-filename');
+    const converterFilesize = document.getElementById('converter-filesize');
+    const converterClear    = document.getElementById('converter-clear');
+    const converterPreview  = document.getElementById('converter-preview');
+    const converterPlayer   = document.getElementById('converter-player');
+    const converterControls = document.getElementById('converter-controls');
+    const convertExecute    = document.getElementById('convert-execute');
+    const converterProgress = document.getElementById('converter-progress');
+    const convertProgressFill = document.getElementById('convert-progress-fill');
+    const convertProgressText = document.getElementById('convert-progress-text');
+
+    let converterFile = null;
+    let converterPreviewURL = null;
+
+    // Mirror ffmpeg status to the converter tab indicator
+    const origSetFfmpegStatus = setFfmpegStatus;
+    setFfmpegStatus = function(state, text) {
+      origSetFfmpegStatus(state, text);
+      document.getElementById('ffmpeg-dot-conv').className = 'ffmpeg-dot ' + state;
+      document.getElementById('ffmpeg-label-conv').textContent = text;
+    };
+    // Sync initial state
+    setFfmpegStatus(ffmpegDot.className.replace('ffmpeg-dot ', ''), ffmpegLabel.textContent);
+
+    converterDrop.addEventListener('click', () => converterFileInput.click());
+    converterDrop.addEventListener('dragover', (e) => { e.preventDefault(); converterDrop.classList.add('drag-over'); });
+    converterDrop.addEventListener('dragleave', () => converterDrop.classList.remove('drag-over'));
+    converterDrop.addEventListener('drop', (e) => {
+      e.preventDefault();
+      converterDrop.classList.remove('drag-over');
+      if (e.dataTransfer.files[0]) handleConverterFile(e.dataTransfer.files[0]);
+    });
+    converterFileInput.addEventListener('change', (e) => {
+      if (e.target.files[0]) handleConverterFile(e.target.files[0]);
+      e.target.value = '';
+    });
+
+    function resolveConverterType(file) {
+      if (ALLOWED_CONVERTER.has(file.type)) return file.type;
+      const ext = file.name.split('.').pop().toLowerCase();
+      return EXT_MIME_CONV[ext] || file.type;
+    }
+
+    async function handleConverterFile(file) {
+      const mediaType = resolveConverterType(file);
+      if (!ALLOWED_CONVERTER.has(mediaType)) {
+        showToast('Unsupported format. Use MP4, WebM, MP3, or WAV.', 'error');
+        return;
+      }
+      if (file.size > SIZE_BLOCK) {
+        showToast('File exceeds 500 MB limit.', 'error');
+        return;
+      }
+      converterFile = file;
+      converterFilename.textContent = file.name;
+      converterFilesize.textContent = formatSize(file.size);
+      converterFileInfo.classList.remove('hidden');
+
+      if (converterPreviewURL) URL.revokeObjectURL(converterPreviewURL);
+      if (mediaType.startsWith('video')) {
+        converterPreviewURL = URL.createObjectURL(file);
+        converterPlayer.src = converterPreviewURL;
+        converterPreview.classList.remove('hidden');
+      } else {
+        converterPreview.classList.add('hidden');
+      }
+
+      converterControls.classList.remove('hidden');
+      convertExecute.disabled = !ffmpegReady;
+      converterDrop.classList.add('hidden');
+      showToast(`Loaded ${file.name}`, 'success');
+    }
+
+    converterClear.addEventListener('click', () => {
+      converterFile = null;
+      converterFileInfo.classList.add('hidden');
+      converterControls.classList.add('hidden');
+      converterProgress.classList.add('hidden');
+      converterDrop.classList.remove('hidden');
+      converterPlayer.src = '';
+      converterPreview.classList.add('hidden');
+      if (converterPreviewURL) { URL.revokeObjectURL(converterPreviewURL); converterPreviewURL = null; }
+      convertProgressFill.style.width = '0%';
+    });
+
+    convertExecute.addEventListener('click', async () => {
+      if (!ffmpegReady || !ffmpegInstance || !converterFile) return;
+
+      convertExecute.disabled = true;
+      convertExecute.textContent = 'Converting...';
+      converterProgress.classList.remove('hidden');
+      convertProgressFill.style.width = '0%';
+      convertProgressText.textContent = 'Processing...';
+
+      try {
+        const ext = converterFile.name.split('.').pop().toLowerCase() || 'mp4';
+        const inputName = 'conv_input.' + ext;
+        const outputName = 'conv_output.mp3';
+        const bitrate = document.getElementById('convert-bitrate').value;
+
+        await ffmpegInstance.writeFile(inputName, new Uint8Array(await converterFile.arrayBuffer()));
+        await ffmpegInstance.exec(['-i', inputName, '-vn', '-ab', bitrate, outputName]);
+
+        const data = await ffmpegInstance.readFile(outputName);
+        const blob = new Blob([data.buffer], { type: 'audio/mpeg' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = converterFile.name.replace(/\.[^.]+$/, '') + '.mp3';
+        a.click();
+        URL.revokeObjectURL(url);
+
+        try {
+          await ffmpegInstance.deleteFile(inputName);
+          await ffmpegInstance.deleteFile(outputName);
+        } catch (_) { }
+
+        convertProgressFill.style.width = '100%';
+        convertProgressText.textContent = 'Done!';
+        showToast('Conversion complete — download started.', 'success');
+      } catch (err) {
+        console.error('Convert error:', err);
+        showToast('Conversion failed: ' + (err.message || 'unknown error'), 'error');
+        convertProgressText.textContent = 'Failed.';
+      }
+
+      convertExecute.disabled = false;
+      convertExecute.textContent = 'Convert';
+    });
+
+    // ── Tab switching ──
     const tabs = document.querySelectorAll('[role="tab"]');
     const panes = document.querySelectorAll('.tab-pane');
 
@@ -937,11 +1233,11 @@
         panes.forEach((p) => p.classList.remove('active'));
         document.getElementById('pane-' + target).classList.add('active');
 
-        // Lazy-load ffmpeg when trimmer tab first activated
-        if (target === 'trimmer') ensureFfmpegLoaded();
+        if (target === 'trimmer' || target === 'converter') ensureFfmpegLoaded();
       });
     });
   </script>
 
 </body>
+
 </html>
