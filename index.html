@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ahmotools</title>
+  <!-- Service worker injects COOP/COEP headers, enabling SharedArrayBuffer for ffmpeg.wasm -->
+  <script src="coi-serviceworker.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwindcss.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            mono: ['"JetBrains Mono"', '"Fira Code"', 'ui-monospace', 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+    /* Note: when served with COEP headers, Google Fonts CSS loads fine via credentialless */
+
+    body {
+      background: #0a0a0f;
+      min-height: 100vh;
+    }
+
+    .bg-grid {
+      background-image:
+        linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .glass-strong {
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .tab-btn {
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.active {
+      background: rgba(255, 255, 255, 0.08);
+      color: #f0f0f0;
+      box-shadow: 0 0 20px rgba(153, 193, 222, 0.1);
+      border-color: rgba(153, 193, 222, 0.3);
+    }
+
+    .tab-btn:not(.active):hover {
+      background: rgba(255, 255, 255, 0.03);
+      color: #a0a0a0;
+    }
+
+    .glow-accent {
+      position: fixed;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.07;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .tab-pane {
+      display: none;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    /* Editor */
+    #editor {
+      background: rgba(0, 0, 0, 0.3);
+      resize: none;
+      field-sizing: content;
+      min-height: 50vh;
+      max-height: 75vh;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.1) transparent;
+    }
+    #editor:focus {
+      outline: none;
+      box-shadow: 0 0 0 1px rgba(153, 193, 222, 0.25);
+    }
+    #editor::placeholder {
+      color: rgba(255,255,255,0.15);
+    }
+
+    /* Fallback for Tailwind's .hidden in case CDN is slow */
+    .hidden { display: none !important; }
+
+    /* Toolbar buttons */
+    .tool-btn {
+      transition: all 0.15s ease;
+    }
+    .tool-btn:hover {
+      background: rgba(255,255,255,0.08);
+    }
+    .tool-btn:active {
+      transform: scale(0.97);
+    }
+
+    /* Strip button accent */
+    .strip-btn {
+      background: rgba(153, 193, 222, 0.15);
+      border-color: rgba(153, 193, 222, 0.3);
+    }
+    .strip-btn:hover {
+      background: rgba(153, 193, 222, 0.25);
+    }
+
+    /* Drop zone highlight */
+    .drop-active {
+      border-color: rgba(153, 193, 222, 0.5) !important;
+      background: rgba(153, 193, 222, 0.05) !important;
+    }
+
+    /* Toast */
+    .toast {
+      animation: toast-in 0.25s ease-out, toast-out 0.3s ease-in forwards;
+    }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(12px) scale(0.96); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes toast-out {
+      from { opacity: 1; transform: translateY(0) scale(1); }
+      to   { opacity: 0; transform: translateY(-8px) scale(0.96); }
+    }
+
+    /* Export dropdown */
+    .export-menu {
+      display: none;
+    }
+    .export-menu.open {
+      display: block;
+    }
+
+    /* Trimmer */
+    .trimmer-drop {
+      border: 2px dashed rgba(255,255,255,0.08);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .trimmer-drop:hover,
+    .trimmer-drop.drag-over {
+      border-color: rgba(153, 193, 222, 0.4);
+      background: rgba(153, 193, 222, 0.03);
+    }
+
+    .time-input {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #e0e0e8;
+      font-family: inherit;
+      transition: border-color 0.15s ease;
+    }
+    .time-input:focus {
+      outline: none;
+      border-color: rgba(153, 193, 222, 0.4);
+    }
+
+    .trim-btn {
+      background: rgba(153, 193, 222, 0.2);
+      border: 1px solid rgba(153, 193, 222, 0.35);
+      color: #b8d4e8;
+      transition: all 0.15s ease;
+    }
+    .trim-btn:hover:not(:disabled) {
+      background: rgba(153, 193, 222, 0.3);
+    }
+    .trim-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .progress-bar {
+      background: rgba(255,255,255,0.05);
+      border-radius: 999px;
+      overflow: hidden;
+      height: 6px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #6a9cbd, #99c1de);
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+
+    .ffmpeg-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ffmpeg-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+    }
+    .ffmpeg-dot.loading { background: #facc15; animation: pulse-dot 1s ease infinite; }
+    .ffmpeg-dot.ready   { background: #34d399; }
+    .ffmpeg-dot.error   { background: #f87171; }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0.3; }
+    }
+  </style>
+</head>
+<body class="bg-grid font-mono text-neutral-300 antialiased">
+
+  <!-- Ambient glow accents -->
+  <div class="glow-accent" style="top: -100px; left: -100px; background: #99c1de;"></div>
+  <div class="glow-accent" style="bottom: -100px; right: -100px; background: #6a9cbd;"></div>
+
+  <div class="relative z-10 max-w-6xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+
+    <!-- Header -->
+    <header class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-3">
+        <img src="capybara.png" alt="ahmotools" class="w-8 h-8 rounded-lg object-cover">
+        <h1 class="text-lg font-semibold text-neutral-100 tracking-tight">ahmotools</h1>
+      </div>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="glass rounded-xl p-1.5 flex gap-1.5 mb-6" role="tablist">
+      <button
+        class="tab-btn active flex-1 px-4 py-2.5 rounded-lg text-sm font-medium border border-transparent"
+        role="tab"
+        aria-selected="true"
+        data-tab="workspace"
+      >
+        Workspace
+      </button>
+      <button
+        class="tab-btn flex-1 px-4 py-2.5 rounded-lg text-sm font-medium text-neutral-500 border border-transparent"
+        role="tab"
+        aria-selected="false"
+        data-tab="trimmer"
+      >
+        Video Trimmer
+      </button>
+    </nav>
+
+    <!-- Tab Panes -->
+    <main>
+      <!-- Workspace Pane -->
+      <section id="pane-workspace" class="tab-pane active" role="tabpanel">
+        <div class="glass-strong rounded-2xl p-4 sm:p-6">
+
+          <!-- Toolbar -->
+          <div class="flex flex-wrap items-center gap-2 mb-4">
+
+            <!-- Open File -->
+            <label class="tool-btn glass rounded-lg px-3 py-2 text-xs cursor-pointer flex items-center gap-1.5">
+              <span>&#128194;</span> Open
+              <input type="file" id="file-input" accept=".txt,.md,.py" class="hidden">
+            </label>
+
+            <!-- Export dropdown -->
+            <div class="relative">
+              <button id="export-toggle" class="tool-btn glass rounded-lg px-3 py-2 text-xs flex items-center gap-1.5">
+                <span>&#128190;</span> Export <span class="text-neutral-600">&#9662;</span>
+              </button>
+              <div id="export-menu" class="export-menu absolute top-full left-0 mt-1 glass-strong rounded-lg py-1 z-20 min-w-[120px]">
+                <button data-ext="txt" class="export-opt w-full text-left px-3 py-1.5 text-xs hover:bg-white/5">.txt</button>
+                <button data-ext="md" class="export-opt w-full text-left px-3 py-1.5 text-xs hover:bg-white/5">.md</button>
+                <button data-ext="py" class="export-opt w-full text-left px-3 py-1.5 text-xs hover:bg-white/5">.py</button>
+              </div>
+            </div>
+
+            <!-- Spacer -->
+            <div class="flex-1"></div>
+
+            <!-- Status -->
+            <span id="line-count" class="text-xs text-neutral-600 tabular-nums">0 lines</span>
+            <span id="char-count" class="text-xs text-neutral-600 tabular-nums">0 chars</span>
+
+            <!-- Strip Spaces -->
+            <button id="strip-btn" class="strip-btn tool-btn rounded-lg px-3 py-2 text-xs font-medium text-sky-300 border flex items-center gap-1.5">
+              <span>&#9889;</span> Strip Spaces
+            </button>
+
+            <!-- Undo Strip (hidden until a strip runs) -->
+            <button id="undo-btn" class="hidden tool-btn glass rounded-lg px-3 py-2 text-xs flex items-center gap-1.5 text-amber-400/80">
+              &#8630; Undo
+            </button>
+          </div>
+
+          <!-- Editor area (also a drop zone) -->
+          <div id="drop-zone" class="rounded-xl border border-transparent transition-colors duration-200">
+            <textarea
+              id="editor"
+              class="w-full rounded-xl px-4 py-3 text-sm text-neutral-200 font-mono border border-white/5 leading-relaxed"
+              placeholder="Paste or drop a .txt, .md, or .py file here..."
+              spellcheck="false"
+            ></textarea>
+          </div>
+
+          <!-- Drop hint -->
+          <p class="mt-2 text-[10px] text-neutral-700 text-center">Drop text files here &middot; binary files will be rejected</p>
+
+        </div>
+      </section>
+
+      <!-- Video Trimmer Pane -->
+      <section id="pane-trimmer" class="tab-pane" role="tabpanel">
+        <div class="glass-strong rounded-2xl p-4 sm:p-6">
+
+          <!-- Trimmer header row -->
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-sm font-medium text-neutral-200">Video / Audio Trimmer</h2>
+            <span id="ffmpeg-status" class="ffmpeg-status text-[11px] text-neutral-500">
+              <span class="ffmpeg-dot loading" id="ffmpeg-dot"></span>
+              <span id="ffmpeg-label">Loading ffmpeg...</span>
+            </span>
+          </div>
+
+          <!-- Drop zone -->
+          <div id="trimmer-drop" class="trimmer-drop rounded-xl p-10 text-center mb-4">
+            <div class="text-3xl opacity-20 mb-2">&#128253;</div>
+            <p class="text-neutral-500 text-sm mb-1">Drop a video or audio file here</p>
+            <p class="text-neutral-600 text-[11px]">MP4, WebM, MP3 &middot; max 500 MB</p>
+            <input type="file" id="trimmer-file-input" accept="video/mp4,video/webm,audio/mpeg,audio/mp3" class="hidden">
+          </div>
+
+          <!-- File info (hidden until file loaded) -->
+          <div id="trimmer-file-info" class="hidden mb-4 glass rounded-xl px-4 py-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <p id="trimmer-filename" class="text-sm text-neutral-200 truncate max-w-[280px]"></p>
+                <p id="trimmer-filesize" class="text-[11px] text-neutral-500 mt-0.5"></p>
+              </div>
+              <button id="trimmer-clear" class="text-neutral-600 hover:text-neutral-400 text-xs px-2 py-1 rounded hover:bg-white/5 transition-colors">Clear</button>
+            </div>
+            <!-- Size warning -->
+            <p id="trimmer-size-warning" class="hidden mt-2 text-[11px] text-amber-400/80 leading-relaxed"></p>
+          </div>
+
+          <!-- Media preview (hidden until file loaded) -->
+          <div id="trimmer-preview" class="hidden mb-4 rounded-xl overflow-hidden bg-black/30 border border-white/5">
+            <video id="preview-player" class="w-full max-h-[320px]" controls preload="metadata"></video>
+          </div>
+
+          <!-- Trim controls (hidden until file loaded) -->
+          <div id="trimmer-controls" class="hidden space-y-4">
+            <!-- Time inputs -->
+            <div class="flex items-end gap-4">
+              <div class="flex-1">
+                <label class="block text-[11px] text-neutral-500 mb-1.5">Start (seconds)</label>
+                <input id="trim-start" type="number" min="0" step="0.1" value="0" class="time-input w-full rounded-lg px-3 py-2 text-sm tabular-nums">
+              </div>
+              <div class="flex-1">
+                <label class="block text-[11px] text-neutral-500 mb-1.5">End (seconds)</label>
+                <input id="trim-end" type="number" min="0" step="0.1" value="0" class="time-input w-full rounded-lg px-3 py-2 text-sm tabular-nums">
+              </div>
+              <button id="trim-execute" class="trim-btn rounded-lg px-5 py-2 text-sm font-medium" disabled>
+                Trim
+              </button>
+            </div>
+
+            <!-- Slider range -->
+            <div class="space-y-1">
+              <input id="trim-range-start" type="range" min="0" max="100" step="0.1" value="0" class="w-full accent-sky-400 h-1.5">
+              <input id="trim-range-end" type="range" min="0" max="100" step="0.1" value="100" class="w-full accent-sky-400 h-1.5">
+            </div>
+
+            <!-- Progress -->
+            <div id="trimmer-progress" class="hidden space-y-2">
+              <div class="progress-bar">
+                <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+              </div>
+              <p id="progress-text" class="text-[11px] text-neutral-500 text-center">Processing...</p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-8 text-center text-neutral-600 text-xs">
+      local &middot; offline &middot; fast
+    </footer>
+
+  </div>
+
+  <!-- Toast container -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <script>
+    // ── Toast system ──
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const colors = {
+        error:   'border-red-500/40 text-red-300',
+        warning: 'border-amber-500/40 text-amber-300',
+        success: 'border-emerald-500/40 text-emerald-300',
+        info:    'border-sky-400/40 text-sky-300',
+      };
+      const toast = document.createElement('div');
+      const duration = type === 'error' ? 4500 : 3000;
+      toast.className = `toast glass-strong rounded-lg px-4 py-2.5 text-xs border pointer-events-auto ${colors[type] || colors.info}`;
+      toast.textContent = message;
+      toast.style.animationDuration = '0.25s, 0.3s';
+      toast.style.animationDelay = `0s, ${duration}ms`;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), duration + 350);
+    }
+
+    // ── Allowed text extensions ──
+    const ALLOWED_EXT = new Set(['txt', 'md', 'py']);
+
+    function getExtension(filename) {
+      const parts = filename.split('.');
+      return parts.length > 1 ? parts.pop().toLowerCase() : '';
+    }
+
+    function isAllowedFile(file) {
+      return ALLOWED_EXT.has(getExtension(file.name));
+    }
+
+    // ── Read file into editor ──
+    const editor = document.getElementById('editor');
+
+    function loadFile(file) {
+      if (!isAllowedFile(file)) {
+        showToast('Unsupported file type. Please upload text, markdown, or python files only.', 'error');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        editor.value = e.target.result;
+        updateCounts();
+        showToast(`Opened ${file.name}`, 'success');
+      };
+      reader.onerror = () => showToast('Failed to read file.', 'error');
+      reader.readAsText(file);
+    }
+
+    // ── File input handler ──
+    document.getElementById('file-input').addEventListener('change', (e) => {
+      if (e.target.files[0]) loadFile(e.target.files[0]);
+      e.target.value = '';
+    });
+
+    // ── Drag & drop with binary guard ──
+    const dropZone = document.getElementById('drop-zone');
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('drop-active');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('drop-active');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('drop-active');
+      const file = e.dataTransfer.files[0];
+      if (file) loadFile(file);
+    });
+
+    // Also guard the editor itself (prevent browser navigating to dropped binary)
+    editor.addEventListener('dragover', (e) => e.preventDefault());
+    editor.addEventListener('drop', (e) => {
+      if (e.dataTransfer.files.length) {
+        e.preventDefault();
+        loadFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    // ── Line & char counts ──
+    const lineCount = document.getElementById('line-count');
+    const charCount = document.getElementById('char-count');
+
+    function updateCounts() {
+      const text = editor.value;
+      const lines = text ? text.split('\n').length : 0;
+      lineCount.textContent = `${lines} line${lines !== 1 ? 's' : ''}`;
+      charCount.textContent = `${text.length} char${text.length !== 1 ? 's' : ''}`;
+    }
+
+    editor.addEventListener('input', updateCounts);
+    updateCounts();
+
+    // ── Undo Strip ──
+    const undoBtn = document.getElementById('undo-btn');
+    undoBtn.addEventListener('click', () => {
+      if (preStripSnapshot !== null) {
+        editor.value = preStripSnapshot;
+        updateCounts();
+        preStripSnapshot = null;
+        undoBtn.classList.add('hidden');
+        showToast('Strip undone.', 'info');
+      }
+    });
+
+    // ── Space Stripper ──
+    let preStripSnapshot = null;
+
+    document.getElementById('strip-btn').addEventListener('click', () => {
+      const before = editor.value;
+      if (!before.trim()) {
+        showToast('Editor is empty — nothing to strip.', 'warning');
+        return;
+      }
+      // Save undo snapshot
+      preStripSnapshot = before;
+      undoBtn.classList.remove('hidden');
+
+      // 1. Remove all blank lines (empty or whitespace-only)
+      // 2. Trim trailing whitespace per line
+      // 3. Collapse double spaces within lines
+      const after = before
+        .split('\n')
+        .filter((line) => line.trim().length > 0)
+        .map((line) => line.trimEnd().replace(/ {2,}/g, ' '))
+        .join('\n');
+      editor.value = after;
+      updateCounts();
+      const saved = before.length - after.length;
+      if (saved > 0) {
+        showToast(`Stripped ${saved} excess character${saved !== 1 ? 's' : ''}.`, 'success');
+      } else {
+        showToast('Text is already clean.', 'info');
+        preStripSnapshot = null;
+        undoBtn.classList.add('hidden');
+      }
+    });
+
+    // ── Export ──
+    const exportToggle = document.getElementById('export-toggle');
+    const exportMenu = document.getElementById('export-menu');
+
+    exportToggle.addEventListener('click', () => {
+      exportMenu.classList.toggle('open');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!exportToggle.contains(e.target) && !exportMenu.contains(e.target)) {
+        exportMenu.classList.remove('open');
+      }
+    });
+
+    document.querySelectorAll('.export-opt').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const ext = btn.dataset.ext;
+        const text = editor.value;
+        if (!text.trim()) {
+          showToast('Nothing to export — editor is empty.', 'warning');
+          exportMenu.classList.remove('open');
+          return;
+        }
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ahmotools-export.${ext}`;
+        a.click();
+        URL.revokeObjectURL(url);
+        exportMenu.classList.remove('open');
+        showToast(`Exported as .${ext}`, 'success');
+      });
+    });
+
+    // ══════════════════════════════════════
+    // ── Bucket 4: Video Trimmer ──
+    // ══════════════════════════════════════
+
+    // ── ffmpeg.wasm loader ──
+    // Uses the ESM-compatible UMD build from unpkg.
+    const FFMPEG_CORE_URL  = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js';
+    const FFMPEG_CORE_WASM = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.wasm';
+
+    let ffmpegInstance = null;
+    let ffmpegReady = false;
+
+    const ffmpegDot   = document.getElementById('ffmpeg-dot');
+    const ffmpegLabel = document.getElementById('ffmpeg-label');
+
+    function setFfmpegStatus(state, text) {
+      ffmpegDot.className = 'ffmpeg-dot ' + state;
+      ffmpegLabel.textContent = text;
+    }
+
+    // Dynamically load the FFmpeg UMD bundle and initialize
+    async function loadFfmpeg() {
+      try {
+        setFfmpegStatus('loading', 'Loading ffmpeg...');
+
+        // Load the FFmpeg UMD script
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js';
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+
+        // Load the util bundle for fetchFile
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/util.js';
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+
+        const { FFmpeg } = FFmpegWASM;
+        ffmpegInstance = new FFmpeg();
+
+        ffmpegInstance.on('progress', ({ progress }) => {
+          const pct = Math.min(100, Math.max(0, Math.round(progress * 100)));
+          document.getElementById('progress-fill').style.width = pct + '%';
+          document.getElementById('progress-text').textContent = `Processing... ${pct}%`;
+        });
+
+        ffmpegInstance.on('log', ({ message }) => {
+          console.log('[ffmpeg]', message);
+        });
+
+        await ffmpegInstance.load({
+          coreURL: FFMPEG_CORE_URL,
+          wasmURL: FFMPEG_CORE_WASM,
+        });
+
+        ffmpegReady = true;
+        setFfmpegStatus('ready', 'ffmpeg ready');
+      } catch (err) {
+        console.error('ffmpeg load error:', err);
+        setFfmpegStatus('error', 'ffmpeg failed to load');
+        showToast('ffmpeg.wasm failed to load. Video trimming unavailable.', 'error');
+      }
+    }
+
+    // Lazy-load: triggered on first trimmer tab activation (see tab switcher below)
+    let ffmpegLoadTriggered = false;
+    function ensureFfmpegLoaded() {
+      if (!ffmpegLoadTriggered) {
+        ffmpegLoadTriggered = true;
+        loadFfmpeg();
+      }
+    }
+
+    // ── Size constants (bytes) ──
+    const SIZE_WARN  = 200 * 1024 * 1024;  // 200 MB
+    const SIZE_BLOCK = 500 * 1024 * 1024;  // 500 MB
+
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    // ── Trimmer DOM refs ──
+    const trimmerDrop      = document.getElementById('trimmer-drop');
+    const trimmerFileInput = document.getElementById('trimmer-file-input');
+    const trimmerFileInfo  = document.getElementById('trimmer-file-info');
+    const trimmerFilename  = document.getElementById('trimmer-filename');
+    const trimmerFilesize  = document.getElementById('trimmer-filesize');
+    const trimmerSizeWarn  = document.getElementById('trimmer-size-warning');
+    const trimmerClear     = document.getElementById('trimmer-clear');
+    const trimmerControls  = document.getElementById('trimmer-controls');
+    const trimStart        = document.getElementById('trim-start');
+    const trimEnd          = document.getElementById('trim-end');
+    const trimRangeStart   = document.getElementById('trim-range-start');
+    const trimRangeEnd     = document.getElementById('trim-range-end');
+    const trimExecute      = document.getElementById('trim-execute');
+    const trimmerProgress  = document.getElementById('trimmer-progress');
+    const progressFill     = document.getElementById('progress-fill');
+    const progressText     = document.getElementById('progress-text');
+
+    const trimmerPreview = document.getElementById('trimmer-preview');
+    const previewPlayer  = document.getElementById('preview-player');
+    let previewURL = null;       // objectURL for preview, revoked on clear
+
+    let loadedFile = null;       // raw File object
+    let mediaDuration = 0;       // seconds (detected via <video>/<audio> element)
+
+    const ALLOWED_MEDIA = new Set(['video/mp4', 'video/webm', 'audio/mpeg', 'audio/mp3']);
+
+    // ── Drop zone click opens file picker ──
+    trimmerDrop.addEventListener('click', () => trimmerFileInput.click());
+
+    // ── Drop zone drag & drop ──
+    trimmerDrop.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      trimmerDrop.classList.add('drag-over');
+    });
+    trimmerDrop.addEventListener('dragleave', () => {
+      trimmerDrop.classList.remove('drag-over');
+    });
+    trimmerDrop.addEventListener('drop', (e) => {
+      e.preventDefault();
+      trimmerDrop.classList.remove('drag-over');
+      if (e.dataTransfer.files[0]) handleMediaFile(e.dataTransfer.files[0]);
+    });
+
+    trimmerFileInput.addEventListener('change', (e) => {
+      if (e.target.files[0]) handleMediaFile(e.target.files[0]);
+      e.target.value = '';
+    });
+
+    // ── Handle incoming media file ──
+    async function handleMediaFile(file) {
+      // Type check
+      if (!ALLOWED_MEDIA.has(file.type)) {
+        showToast('Unsupported format. Use MP4, WebM, or MP3.', 'error');
+        return;
+      }
+
+      // Size: hard block > 500 MB
+      if (file.size > SIZE_BLOCK) {
+        showToast('File exceeds browser memory limits (500MB). Please use local desktop software for large files.', 'error');
+        return;
+      }
+
+      loadedFile = file;
+
+      // Show file info
+      trimmerFilename.textContent = file.name;
+      trimmerFilesize.textContent = formatSize(file.size);
+      trimmerFileInfo.classList.remove('hidden');
+
+      // Size: warning 200–500 MB
+      if (file.size > SIZE_WARN) {
+        trimmerSizeWarn.textContent = 'Large file detected. Processing may slow down browser response times.';
+        trimmerSizeWarn.classList.remove('hidden');
+      } else {
+        trimmerSizeWarn.classList.add('hidden');
+      }
+
+      // Detect duration
+      mediaDuration = await detectDuration(file);
+      if (mediaDuration > 0) {
+        trimEnd.value = mediaDuration.toFixed(1);
+        trimEnd.max = mediaDuration;
+        trimStart.max = mediaDuration;
+        trimRangeStart.max = mediaDuration;
+        trimRangeEnd.max = mediaDuration;
+        trimRangeStart.value = 0;
+        trimRangeEnd.value = mediaDuration;
+        trimRangeStart.step = Math.max(0.1, mediaDuration / 1000);
+        trimRangeEnd.step = Math.max(0.1, mediaDuration / 1000);
+      }
+
+      // Show preview (video files only)
+      if (previewURL) URL.revokeObjectURL(previewURL);
+      if (file.type.startsWith('video')) {
+        previewURL = URL.createObjectURL(file);
+        previewPlayer.src = previewURL;
+        trimmerPreview.classList.remove('hidden');
+      } else {
+        trimmerPreview.classList.add('hidden');
+      }
+
+      // Show controls
+      trimmerControls.classList.remove('hidden');
+      trimExecute.disabled = !ffmpegReady;
+      trimmerDrop.classList.add('hidden');
+
+      showToast(`Loaded ${file.name}`, 'success');
+    }
+
+    // ── Detect duration using a hidden media element ──
+    function detectDuration(file) {
+      return new Promise((resolve) => {
+        const url = URL.createObjectURL(file);
+        const el = file.type.startsWith('audio') ? new Audio() : document.createElement('video');
+        el.preload = 'metadata';
+        el.onloadedmetadata = () => {
+          const dur = isFinite(el.duration) ? el.duration : 0;
+          URL.revokeObjectURL(url);
+          resolve(dur);
+        };
+        el.onerror = () => {
+          URL.revokeObjectURL(url);
+          resolve(0);
+        };
+        el.src = url;
+      });
+    }
+
+    // ── Sync sliders ↔ number inputs (with clamping) ──
+    trimRangeStart.addEventListener('input', () => {
+      let v = parseFloat(trimRangeStart.value);
+      const endV = parseFloat(trimRangeEnd.value);
+      if (v >= endV) { v = Math.max(0, endV - 0.1); trimRangeStart.value = v; }
+      trimStart.value = v.toFixed(1);
+    });
+    trimRangeEnd.addEventListener('input', () => {
+      let v = parseFloat(trimRangeEnd.value);
+      const startV = parseFloat(trimRangeStart.value);
+      if (v <= startV) { v = startV + 0.1; trimRangeEnd.value = v; }
+      trimEnd.value = v.toFixed(1);
+    });
+    trimStart.addEventListener('input', () => {
+      let v = parseFloat(trimStart.value) || 0;
+      const endV = parseFloat(trimEnd.value) || 0;
+      if (v >= endV && endV > 0) { v = Math.max(0, endV - 0.1); trimStart.value = v.toFixed(1); }
+      trimRangeStart.value = v;
+    });
+    trimEnd.addEventListener('input', () => {
+      let v = parseFloat(trimEnd.value) || 0;
+      const startV = parseFloat(trimStart.value) || 0;
+      if (v <= startV) { v = startV + 0.1; trimEnd.value = v.toFixed(1); }
+      trimRangeEnd.value = v;
+    });
+
+    // ── Clear file ──
+    trimmerClear.addEventListener('click', () => {
+      loadedFile = null;
+      mediaDuration = 0;
+      trimmerFileInfo.classList.add('hidden');
+      trimmerControls.classList.add('hidden');
+      trimmerProgress.classList.add('hidden');
+      trimmerDrop.classList.remove('hidden');
+      trimStart.value = 0;
+      trimEnd.value = 0;
+      progressFill.style.width = '0%';
+      // Cleanup preview
+      previewPlayer.src = '';
+      trimmerPreview.classList.add('hidden');
+      if (previewURL) { URL.revokeObjectURL(previewURL); previewURL = null; }
+    });
+
+    // ── Execute trim ──
+    trimExecute.addEventListener('click', async () => {
+      if (!ffmpegReady || !ffmpegInstance || !loadedFile) return;
+
+      const start = parseFloat(trimStart.value) || 0;
+      const end   = parseFloat(trimEnd.value) || 0;
+
+      if (end <= start) {
+        showToast('End time must be greater than start time.', 'warning');
+        return;
+      }
+      if (mediaDuration > 0 && end > mediaDuration) {
+        showToast('End time exceeds file duration.', 'warning');
+        return;
+      }
+
+      trimExecute.disabled = true;
+      trimExecute.textContent = 'Trimming...';
+      trimmerProgress.classList.remove('hidden');
+      progressFill.style.width = '0%';
+      progressText.textContent = 'Processing...';
+
+      try {
+        const { fetchFile } = FFmpegUtil;
+
+        // Determine output extension
+        const ext = loadedFile.name.split('.').pop().toLowerCase() || 'mp4';
+        const inputName  = 'input.' + ext;
+        const outputName = 'output.' + ext;
+
+        // Write input file to ffmpeg virtual FS
+        await ffmpegInstance.writeFile(inputName, await fetchFile(loadedFile));
+
+        // Build ffmpeg args
+        const duration = (end - start).toFixed(3);
+        await ffmpegInstance.exec([
+          '-ss', start.toFixed(3),
+          '-i', inputName,
+          '-t', duration,
+          '-c', 'copy',
+          outputName
+        ]);
+
+        // Read output
+        const data = await ffmpegInstance.readFile(outputName);
+
+        // Trigger download
+        const mimeMap = { mp4: 'video/mp4', webm: 'video/webm', mp3: 'audio/mpeg' };
+        const blob = new Blob([data.buffer], { type: mimeMap[ext] || 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const baseName = loadedFile.name.replace(/\.[^.]+$/, '');
+        a.download = `${baseName}_trimmed.${ext}`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        // Cleanup virtual FS
+        try {
+          await ffmpegInstance.deleteFile(inputName);
+          await ffmpegInstance.deleteFile(outputName);
+        } catch (_) {}
+
+        progressFill.style.width = '100%';
+        progressText.textContent = 'Done!';
+        showToast('Trim complete — download started.', 'success');
+
+      } catch (err) {
+        console.error('Trim error:', err);
+        showToast('Trim failed: ' + (err.message || 'unknown error'), 'error');
+        progressText.textContent = 'Failed.';
+      }
+
+      trimExecute.disabled = false;
+      trimExecute.textContent = 'Trim';
+    });
+
+    // ── Tab switching (from Bucket 1) ──
+    const tabs = document.querySelectorAll('[role="tab"]');
+    const panes = document.querySelectorAll('.tab-pane');
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.tab;
+
+        tabs.forEach((t) => {
+          t.classList.remove('active');
+          t.setAttribute('aria-selected', 'false');
+        });
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
+
+        panes.forEach((p) => p.classList.remove('active'));
+        document.getElementById('pane-' + target).classList.add('active');
+
+        // Lazy-load ffmpeg when trimmer tab first activated
+        if (target === 'trimmer') ensureFfmpegLoaded();
+      });
+    });
+  </script>
+
+</body>
+</html>
