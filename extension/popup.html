@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      width: 340px;
+      min-height: 160px;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0e0e14;
+      color: #c0c0c8;
+      padding: 16px;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .logo {
+      width: 24px; height: 24px;
+      border-radius: 6px;
+      background: rgba(153, 193, 222, 0.2);
+      border: 1px solid rgba(153, 193, 222, 0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: #99c1de;
+    }
+    .title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #e0e0e8;
+    }
+
+    /* Buttons */
+    .btn {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.08);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn:active { transform: scale(0.98); }
+
+    .btn-primary {
+      background: rgba(153, 193, 222, 0.2);
+      border-color: rgba(153, 193, 222, 0.35);
+      color: #b8d4e8;
+    }
+    .btn-primary:hover { background: rgba(153, 193, 222, 0.3); }
+    .btn-primary:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.04);
+      color: #a0a0a8;
+      margin-top: 6px;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.08); }
+
+    /* Status */
+    .status {
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      line-height: 1.5;
+      display: none;
+    }
+    .status.visible { display: block; }
+
+    .status-error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+    }
+    .status-success {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      color: #6ee7b7;
+    }
+
+    /* Preview */
+    .preview {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.05);
+      font-size: 11px;
+      line-height: 1.5;
+      max-height: 150px;
+      overflow-y: auto;
+      display: none;
+      color: #9090a0;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.1) transparent;
+    }
+    .preview.visible { display: block; }
+
+    /* Action row after fetch */
+    .actions {
+      display: none;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .actions.visible {
+      display: flex;
+    }
+    .actions .btn {
+      flex: 1;
+      margin-top: 0;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 12px; height: 12px;
+      border: 2px solid rgba(139,92,246,0.3);
+      border-top-color: #99c1de;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo">A</div>
+    <span class="title">CC Fetcher</span>
+  </div>
+
+  <button id="fetch-btn" class="btn btn-primary">Fetch Captions</button>
+
+  <div id="status" class="status"></div>
+  <div id="preview" class="preview"></div>
+
+  <div id="actions" class="actions">
+    <button id="copy-btn" class="btn btn-secondary">Copy to Clipboard</button>
+    <button id="send-btn" class="btn btn-secondary">Send to ahmotools</button>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
